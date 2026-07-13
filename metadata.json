@@ -1,0 +1,6 @@
+{
+  "name": "Nexy AI",
+  "description": "An advanced AI-powered assistant featuring multiple language models, deep reasoning capabilities, clean UI themes, and rich audio/sound integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
