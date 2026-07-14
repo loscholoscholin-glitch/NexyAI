@@ -43,6 +43,7 @@ interface ChatState {
   renameChat: (id: string, newTitle: string) => void;
   togglePin: (id: string) => void;
   toggleFavorite: (id: string) => void;
+  toggleArchive: (id: string) => void;
   clearAll: () => void;
 }
 
@@ -179,6 +180,11 @@ export const useChatStore = create<ChatState>()(
       toggleFavorite: (id) =>
         set((state) => ({
           chats: state.chats.map((c) => (c.id === id ? { ...c, favorite: !c.favorite } : c)),
+        })),
+
+      toggleArchive: (id) =>
+        set((state) => ({
+          chats: state.chats.map((c) => (c.id === id ? { ...c, archived: !c.archived } : c)),
         })),
 
       clearAll: () => set({ chats: [], activeChatId: null }),

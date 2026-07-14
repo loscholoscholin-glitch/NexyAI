@@ -127,6 +127,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           </h2>
           <nav className="flex md:flex-col flex-row gap-1.5 w-full overflow-x-auto md:overflow-visible custom-scrollbar shrink-0 pb-1 md:pb-0">
             <TabButton icon={<Cpu className="h-4 w-4" />} label="Inteligencia Artificial" active={activeTab === "ai"} onClick={() => { playClick(); setActiveTab("ai"); }} />
+            <TabButton icon={<Server className="h-4 w-4" />} label="Servidor MCP" active={activeTab === "mcp"} onClick={() => { playClick(); setActiveTab("mcp"); }} />
             <TabButton icon={<Monitor className="h-4 w-4" />} label="Apariencia" active={activeTab === "appearance"} onClick={() => { playClick(); setActiveTab("appearance"); }} />
             <TabButton icon={<Volume2 className="h-4 w-4" />} label="Efectos de Sonido" active={activeTab === "sound"} onClick={() => { playClick(); setActiveTab("sound"); }} />
             <TabButton icon={<User className="h-4 w-4" />} label="Sesión y Cuenta" active={activeTab === "account"} onClick={() => { playClick(); setActiveTab("account"); }} />
@@ -146,6 +147,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               <div>
                 <h3 className="text-2xl font-bold text-white tracking-tight">
                   {activeTab === "ai" && "Configuración de IA"}
+                  {activeTab === "mcp" && "Conexión de Servidor MCP"}
                   {activeTab === "appearance" && "Ajustes de Interfaz"}
                   {activeTab === "sound" && "Sonido y Efectos Especiales"}
                   {activeTab === "account" && "Gestión de Sesión y Cuenta"}
@@ -157,6 +159,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                 </h3>
                 <p className="text-xs text-[var(--muted)] mt-1">
                   {activeTab === "ai" && "Personaliza los modelos lingüísticos y el nivel de razonamiento profundo de Nexy."}
+                  {activeTab === "mcp" && "Conecta servidores de herramientas externas mediante Model Context Protocol (SSE)."}
                   {activeTab === "appearance" && "Modifica la paleta visual, los contrastes y el aspecto gráfico general."}
                   {activeTab === "sound" && "Ajusta las respuestas sonoras, los volúmenes maestros e interacciones."}
                   {activeTab === "account" && "Detalles de tu sesión actual en Puter.js, caducidad e inicios de sesión."}
@@ -236,6 +239,48 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                         <span className="text-[10px] font-mono text-[var(--cyan)] uppercase bg-white/5 px-2 py-0.5 rounded-md">{m.tier}</span>
                       </button>
                     ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: MCP Server */}
+            {activeTab === "mcp" && (
+              <div className="space-y-6">
+                <div className="rounded-xl border border-[var(--line)] bg-white/5 p-5 space-y-4">
+                  <h4 className="font-semibold text-sm text-white flex items-center gap-2">
+                    <Server className="w-4 h-4 text-[var(--violet)]" />
+                    Conexión MCP (Model Context Protocol)
+                  </h4>
+                  <p className="text-xs text-[var(--muted)] mb-4">
+                    Conecta un servidor local o remoto que implemente el protocolo MCP (vía HTTP/SSE) para que NexyAI pueda utilizar herramientas, scripts y leer archivos locales.
+                  </p>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-white">Habilitar Integración MCP</p>
+                      <p className="text-[10px] text-[var(--muted)]">Permite que la IA se comunique con el servidor.</p>
+                    </div>
+                    <button
+                      onClick={() => { playClick(); updateSettings({ mcpEnabled: !settings.mcpEnabled }); }}
+                      className={cn("relative inline-flex h-5 w-9 items-center rounded-full transition-colors", settings.mcpEnabled ? "bg-[var(--violet)]" : "bg-white/10")}
+                    >
+                      <span className={cn("inline-block h-3 w-3 transform rounded-full bg-white transition-transform", settings.mcpEnabled ? "translate-x-5" : "translate-x-1")} />
+                    </button>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/5">
+                    <label className="text-xs font-semibold text-white block mb-2">URL del Servidor (SSE)</label>
+                    <input
+                      type="text"
+                      value={settings.mcpServerUrl}
+                      onChange={(e) => updateSettings({ mcpServerUrl: e.target.value })}
+                      placeholder="http://localhost:3000/sse"
+                      className="w-full rounded-xl border border-white/[0.06] bg-black/40 p-3 text-xs text-white outline-none transition-colors focus:border-[var(--violet)] focus:bg-white/[0.05]"
+                    />
+                    <p className="text-[10px] text-[var(--muted)] mt-2">
+                      El servidor debe soportar peticiones CORS desde este dominio (GitHub Pages o local).
+                    </p>
                   </div>
                 </div>
               </div>

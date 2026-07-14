@@ -29,6 +29,9 @@ interface AppState {
     rememberPreferences: boolean;
     saveChatHistory: boolean;
     saveAiSettings: boolean;
+    // MCP Integration
+    mcpEnabled: boolean;
+    mcpServerUrl: string;
   };
   login: (username: string, isPuterAuth?: boolean) => void;
   logout: () => void;
@@ -65,6 +68,8 @@ export const useAppStore = create<AppState>()(
         rememberPreferences: true,
         saveChatHistory: true,
         saveAiSettings: true,
+        mcpEnabled: false,
+        mcpServerUrl: "http://localhost:3000/sse",
       },
       login: (username, isPuterAuth = false) => set((state) => ({ 
         user: { username, isPuterAuth },

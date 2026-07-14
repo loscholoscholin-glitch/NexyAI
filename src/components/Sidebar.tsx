@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Plus, Search, Settings, Moon, Sun, LogOut, Pin, Star } from "lucide-react";
+import { MessageSquare, Plus, Search, Settings, Moon, Sun, LogOut, Pin, Star, Archive, Trash2 } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { useChatStore } from "@/store/useChatStore";
 import { cn } from "@/lib/utils";
@@ -18,10 +18,13 @@ export function Sidebar({
   onCloseMobile?: () => void;
 }) {
   const { user, settings, updateSettings, logout } = useAppStore();
-  const { chats, activeChatId, createChat, setActiveChat } = useChatStore();
+  const { chats, activeChatId, createChat, setActiveChat, deleteChat, togglePin, toggleFavorite, toggleArchive } = useChatStore();
   const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
-  const sortedChats = [...chats].sort((a, b) => {
+  const filteredChatsByTab = chats.filter((c) => (showArchived ? c.archived : !c.archived));
+
+  const sortedChats = [...filteredChatsByTab].sort((a, b) => {
     // Pinned chats first, then newest updated
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
@@ -70,7 +73,7 @@ export function Sidebar({
         </button>
 
         {/* Search */}
-        <div className="mb-4 relative group">
+        <div className="mb-2 relative group">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)] transition-colors group-focus-within:text-[var(--violet)]" />
           <input
             type="text"
@@ -79,6 +82,22 @@ export function Sidebar({
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-white/[0.06] bg-white/[0.03] p-3 pl-10 text-xs text-[var(--text)] outline-none transition-all hover:bg-white/[0.06] focus:border-[var(--violet)]/50 focus:bg-white/[0.08] placeholder:text-zinc-500"
           />
+        </div>
+
+        {/* Filters */}
+        <div className="flex gap-2 mb-4 px-1">
+          <button
+            onClick={() => setShowArchived(false)}
+            className={cn("flex-1 text-[10px] font-mono uppercase tracking-widest py-1.5 rounded-lg border transition-colors", !showArchived ? "bg-white/10 border-white/20 text-white" : "border-transparent text-zinc-500 hover:bg-white/5")}
+          >
+            Activos
+          </button>
+          <button
+            onClick={() => setShowArchived(true)}
+            className={cn("flex-1 text-[10px] font-mono uppercase tracking-widest py-1.5 rounded-lg border transition-colors flex items-center justify-center gap-1", showArchived ? "bg-[var(--violet)]/20 border-[var(--violet)]/30 text-[var(--violet)]" : "border-transparent text-zinc-500 hover:bg-white/5")}
+          >
+            <Archive className="h-3 w-3" /> Archivados
+          </button>
         </div>
 
         {/* Chat List */}
@@ -115,8 +134,43 @@ export function Sidebar({
                       <MessageSquare className={cn("h-4 w-4 shrink-0 transition-colors", isActive ? "text-[var(--cyan)]" : "text-zinc-500 group-hover/item:text-zinc-300")} />
                       <span className="truncate flex-1 font-medium">{chat.title}</span>
                       
-                      {/* Icons for Favorites and Pinned */}
-                      <div className="flex items-center gap-1 shrink-0">
+                      {/* Action Buttons (Hover) */}
+                      <div className="hidden group-hover/item:flex absolute right-2 bg-slate-900/90 backdrop-blur-md p-1 rounded-lg items-center gap-0.5 shadow-lg border border-white/10 z-10">
+                        <div 
+                          onClick={(e) => { e.stopPropagation(); togglePin(chat.id); }} 
+                          className="p-1.5 hover:bg-white/10 rounded-md transition-colors cursor-pointer text-zinc-400 hover:text-[var(--violet)]"
+                          title="Fijar"
+                        >
+                          <Pin className={cn("h-3.5 w-3.5", chat.pinned && "fill-[var(--violet)] text-[var(--violet)]")} />
+                        </div>
+                        <div 
+                          onClick={(e) => { e.stopPropagation(); toggleFavorite(chat.id); }} 
+                          className="p-1.5 hover:bg-white/10 rounded-md transition-colors cursor-pointer text-zinc-400 hover:text-amber-400"
+                          title="Favorito"
+                        >
+                          <Star className={cn("h-3.5 w-3.5", chat.favorite && "fill-amber-400 text-amber-400")} />
+                        </div>
+                        <div 
+                          onClick={(e) => { e.stopPropagation(); toggleArchive(chat.id); }} 
+                          className="p-1.5 hover:bg-white/10 rounded-md transition-colors cursor-pointer text-zinc-400 hover:text-[var(--cyan)]"
+                          title={chat.archived ? "Desarchivar" : "Archivar"}
+                        >
+                          <Archive className="h-3.5 w-3.5" />
+                        </div>
+                        <div 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if(confirm("¿Eliminar este chat?")) deleteChat(chat.id); 
+                          }} 
+                          className="p-1.5 hover:bg-red-500/20 rounded-md transition-colors cursor-pointer text-zinc-400 hover:text-red-400"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </div>
+                      </div>
+
+                      {/* Icons for Favorites and Pinned (Default State) */}
+                      <div className="flex items-center gap-1 shrink-0 group-hover/item:hidden">
                         {chat.pinned && (
                           <Pin className="h-3 w-3 text-[var(--violet)] fill-[var(--violet)] opacity-70" />
                         )}
