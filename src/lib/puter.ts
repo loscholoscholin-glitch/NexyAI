@@ -56,13 +56,33 @@ export const PuterService = {
 
       // 1. Check MCP configuration
       const { settings } = useAppStore.getState();
-      let openAiTools: any[] = [];
+      
+      // Native Tools
+      let openAiTools: any[] = [
+        {
+          type: "function",
+          function: {
+            name: "generar_imagen",
+            description: "Genera una imagen usando IA basada en una descripción (prompt). Siempre usa calidad 1080p por defecto. Úsalo cuando el usuario pida dibujar, crear, o generar una imagen.",
+            parameters: {
+              type: "object",
+              properties: {
+                prompt: {
+                  type: "string",
+                  description: "Descripción muy detallada de la imagen a generar, en inglés preferentemente (ej. 'A high quality 1080p realistic photo of a cat...')"
+                }
+              },
+              required: ["prompt"]
+            }
+          }
+        }
+      ];
       
       if (settings.mcpEnabled && settings.mcpServerUrl) {
         try {
           await mcpGlobalClient.connect(settings.mcpServerUrl);
           const mcpTools = await mcpGlobalClient.getTools();
-          openAiTools = mcpTools.map((t: any) => ({
+          const mappedMcpTools = mcpTools.map((t: any) => ({
             type: "function",
             function: {
               name: t.name,
@@ -70,9 +90,10 @@ export const PuterService = {
               parameters: t.inputSchema
             }
           }));
+          openAiTools = [...openAiTools, ...mappedMcpTools];
         } catch (err) {
           console.warn("MCP Initialization warning:", err);
-          onChunk("\n⚠️ *Advertencia: No se pudo conectar al servidor MCP. Las herramientas no estarán disponibles.*\n\n", "\n⚠️ *Advertencia: No se pudo conectar al servidor MCP.*\n\n");
+          onChunk("\n⚠️ *Advertencia: No se pudo conectar al servidor MCP. Las herramientas externas no estarán disponibles.*\n\n", "\n⚠️ *Advertencia: No se pudo conectar al servidor MCP.*\n\n");
         }
       }
 
@@ -129,13 +150,28 @@ export const PuterService = {
               if (call.type === "function") {
                 try {
                   const args = JSON.parse(call.function.arguments || "{}");
-                  const result = await mcpGlobalClient.callTool(call.function.name, args);
-                  toolResults.push({
-                    tool_call_id: call.id,
-                    role: "tool",
-                    name: call.function.name,
-                    content: JSON.stringify(result)
-                  });
+                  
+                  if (call.function.name === "generar_imagen") {
+                    onChunk("\n*(Generando imagen con IA...)*\n", "\n*(Generando imagen con IA...)*\n");
+                    // @ts-ignore
+                    const img = await window.puter.ai.txt2img(args.prompt);
+                    const imageUrl = img?.src || img;
+                    
+                    toolResults.push({
+                      tool_call_id: call.id,
+                      role: "tool",
+                      name: call.function.name,
+                      content: `Imagen generada exitosamente. Muestra esto al usuario exactamente así: ![Imagen generada](${imageUrl})`
+                    });
+                  } else {
+                    const result = await mcpGlobalClient.callTool(call.function.name, args);
+                    toolResults.push({
+                      tool_call_id: call.id,
+                      role: "tool",
+                      name: call.function.name,
+                      content: JSON.stringify(result)
+                    });
+                  }
                 } catch (e: any) {
                   toolResults.push({
                     tool_call_id: call.id,
